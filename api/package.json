@@ -1,0 +1,51 @@
+{
+  "name": "datagriid-api",
+  "version": "1.0.0",
+  "description": "Backend API for DataGrid — a modern data engineering platform. Pipelines, CDC, AI-powered SQL, monitoring.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "migrate": "node src/scripts/migrate.js",
+    "test": "node --test tests/",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "data-engineering",
+    "etl",
+    "cdc",
+    "postgresql",
+    "openai",
+    "websocket"
+  ],
+  "author": {
+    "name": "Venkata Srinivas Sunkara",
+    "email": "vasusunkara1424@gmail.com",
+    "url": "https://venkatssunkara.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vasusunkara1424/datagriid.git"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.3",
+    "openai": "^6.32.0",
+    "pg": "^8.20.0",
+    "pg-logical-replication": "^2.3.1",
+    "uuid": "^13.0.0",
+    "ws": "^8.20.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "eslint": "^9.0.0"
+  }
+}
