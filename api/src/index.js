@@ -42,17 +42,52 @@ app.get('/', (_req, res) => {
   res.json({ name: 'DataGrid API', version: '1.0.0', status: 'ok', env: env.NODE_ENV })
 })
 
-app.get('/health', async (_req, res) => {
+// Liveness check — am I running? (used by Railway, load balancers)
+app.get('/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  })
+})
+
+// Readiness check — can I serve real traffic? (checks downstream deps)
+app.get('/health/ready', async (_req, res) => {
+  const checks = {}
+  let overallOk = true
+
   try {
+    const start = Date.now()
     const info = await verifyConnection()
-    res.json({
+    checks.database = {
       status: 'ok',
-      database: info,
-      websocketClients: getClientCount(),
-    })
+      latencyMs: Date.now() - start,
+      version: info.version,
+    }
   } catch (err) {
-    res.status(503).json({ status: 'degraded', error: err.message })
+    overallOk = false
+    checks.database = { status: 'error', error: err.message }
   }
+
+  checks.websocket = {
+    status: 'ok',
+    clients: getClientCount(),
+  }
+
+  const mem = process.memoryUsage()
+  checks.memory = {
+    rssMB: Math.round(mem.rss / 1024 / 1024),
+    heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
+    heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
+  }
+
+  res.status(overallOk ? 200 : 503).json({
+    status: overallOk ? 'ok' : 'degraded',
+    uptime: process.uptime(),
+    version: '1.0.0',
+    checks,
+    timestamp: new Date().toISOString(),
+  })
 })
 
 // ─── Routes ──────────────────────────────────────────────────────────────
