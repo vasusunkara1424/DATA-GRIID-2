@@ -9,6 +9,7 @@ import cors from 'cors'
 import { env } from './config/env.js'
 import { pool, verifyConnection } from './db.js'
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js'
+import { generalLimiter, aiLimiter } from './middleware/rateLimit.js'
 import { startWebSocket, closeWebSocket, getClientCount } from './websocket.js'
 import { startAnomalyDetector, stopAnomalyDetector } from './lib/anomalyDetector.js'
 
@@ -31,6 +32,7 @@ app.use(
   })
 )
 app.use(express.json({ limit: '1mb' }))
+app.use(generalLimiter)
 
 // ─── Health check ────────────────────────────────────────────────────────
 app.get('/', (_req, res) => {
@@ -57,7 +59,7 @@ app.use('/api/stats', statsRouter)
 app.use('/api/alerts', alertsRouter)
 app.use('/api/workspaces', workspacesRouter)
 app.use('/api/usage', usageRouter)
-app.use('/api/ai', aiRouter)
+app.use('/api/ai', aiLimiter, aiRouter)
 
 // ─── Error handlers (must be LAST) ───────────────────────────────────────
 app.use(notFoundHandler)
