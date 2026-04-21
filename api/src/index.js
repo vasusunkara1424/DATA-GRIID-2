@@ -73,13 +73,13 @@ async function start() {
     process.exit(1)
   }
 
-  startWebSocket()
-  startAnomalyDetector()
-
   const server = app.listen(env.PORT, () => {
     console.log(`🚀 DataGrid API listening on http://localhost:${env.PORT}`)
     console.log(`   environment: ${env.NODE_ENV}`)
   })
+
+  startWebSocket(server)
+  startAnomalyDetector()
 
   // ─── Graceful shutdown ─────────────────────────────────────────────────
   const shutdown = (signal) => {

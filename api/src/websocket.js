@@ -1,16 +1,20 @@
 /**
  * WebSocket server.
  * Streams real-time events (alerts, CDC changes, pipeline status) to the frontend.
+ * Attaches to an existing HTTP server so HTTP + WS share one port (required for Railway/Vercel/Heroku-style PaaS).
  */
 
 import { WebSocketServer } from 'ws'
-import { env } from './config/env.js'
 
 const clients = new Set()
 let wss = null
 
-export function startWebSocket() {
-  wss = new WebSocketServer({ port: env.WS_PORT })
+export function startWebSocket(httpServer) {
+  if (!httpServer) {
+    throw new Error('startWebSocket requires an httpServer instance')
+  }
+
+  wss = new WebSocketServer({ server: httpServer, path: '/ws' })
 
   wss.on('connection', (ws) => {
     clients.add(ws)
@@ -32,7 +36,7 @@ export function startWebSocket() {
     console.error('❌ WebSocket server error:', err.message)
   })
 
-  console.log(`🔌 WebSocket server listening on ws://localhost:${env.WS_PORT}`)
+  console.log('🔌 WebSocket server attached to HTTP server at path /ws')
   return wss
 }
 

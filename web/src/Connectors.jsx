@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4001'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+// WS shares the backend origin — http(s):// becomes ws(s):// and we append /ws.
+// Can be overridden with VITE_WS_URL (full URL including path).
+const WS_URL = import.meta.env.VITE_WS_URL || API_URL.replace(/^http/, 'ws') + '/ws'
 const MAX_EVENTS = 50
 
 const CONNECTORS = [
