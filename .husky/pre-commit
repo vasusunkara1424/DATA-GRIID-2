@@ -1,0 +1,19 @@
+#!/bin/sh
+echo "🔍 Scanning for secrets..."
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "⚠️  gitleaks not installed. Run: brew install gitleaks"
+  exit 1
+fi
+
+gitleaks protect --staged --redact --verbose --config=.gitleaks.toml
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: secrets detected in staged changes."
+  echo "   Remove the secret, unstage the file, and try again."
+  exit 1
+fi
+
+echo "✅ No secrets found."
+exit 0

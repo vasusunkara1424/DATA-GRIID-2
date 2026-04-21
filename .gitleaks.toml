@@ -1,0 +1,38 @@
+title = "DataGRIID gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-(proj-)?[A-Za-z0-9_-]{20,}'''
+tags = ["key", "openai"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-[A-Za-z0-9_-]{20,}'''
+tags = ["key", "anthropic"]
+
+[[rules]]
+id = "clerk-secret"
+description = "Clerk Secret Key"
+regex = '''sk_(test|live)_[A-Za-z0-9]{20,}'''
+tags = ["key", "clerk"]
+
+[[rules]]
+id = "stripe-key"
+description = "Stripe Secret Key"
+regex = '''(sk|rk)_(test|live)_[A-Za-z0-9]{20,}'''
+tags = ["key", "stripe"]
+
+[allowlist]
+description = "Ignore these paths"
+paths = [
+  '''node_modules/''',
+  '''\.env\.example''',
+  '''package-lock\.json''',
+  '''_schema_dump\.sql''',
+  '''\.gitleaks\.toml''',
+]
