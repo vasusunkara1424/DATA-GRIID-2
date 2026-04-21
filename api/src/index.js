@@ -10,6 +10,8 @@ import { env } from './config/env.js'
 import { pool, verifyConnection } from './db.js'
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js'
 import { generalLimiter, aiLimiter } from './middleware/rateLimit.js'
+import logger from './lib/logger.js'
+import pinoHttp from 'pino-http'
 import { startWebSocket, closeWebSocket, getClientCount } from './websocket.js'
 import { startAnomalyDetector, stopAnomalyDetector } from './lib/anomalyDetector.js'
 
@@ -33,6 +35,7 @@ app.use(
 )
 app.use(express.json({ limit: '1mb' }))
 app.use(generalLimiter)
+app.use(pinoHttp({ logger, customLogLevel: (req, res, err) => { if (res.statusCode >= 500 || err) return 'error'; if (res.statusCode >= 400) return 'warn'; return 'info' } }))
 
 // ─── Health check ────────────────────────────────────────────────────────
 app.get('/', (_req, res) => {
@@ -69,15 +72,14 @@ app.use(errorHandler)
 async function start() {
   try {
     const dbInfo = await verifyConnection()
-    console.log(`🗄️  Connected to ${dbInfo.version}`)
+    logger.info({ dbVersion: dbInfo.version }, "Database connected")
   } catch (err) {
-    console.error('❌ Database connection failed on startup:', err.message)
+    logger.fatal({ err: err.message }, "Database connection failed on startup")
     process.exit(1)
   }
 
   const server = app.listen(env.PORT, () => {
-    console.log(`🚀 DataGrid API listening on http://localhost:${env.PORT}`)
-    console.log(`   environment: ${env.NODE_ENV}`)
+    logger.info({ port: env.PORT, env: env.NODE_ENV }, 'API server started')
   })
 
   startWebSocket(server)
@@ -85,16 +87,16 @@ async function start() {
 
   // ─── Graceful shutdown ─────────────────────────────────────────────────
   const shutdown = (signal) => {
-    console.log(`\n${signal} received — shutting down gracefully...`)
+    logger.warn({ signal }, 'Shutdown signal received')
     stopAnomalyDetector()
     server.close(async () => {
       await closeWebSocket()
       await pool.end()
-      console.log('✅ All services stopped')
+      logger.info('All services stopped cleanly')
       process.exit(0)
     })
     setTimeout(() => {
-      console.error('⚠️  Forced shutdown after 10s timeout')
+      logger.fatal('Forced shutdown after 10s timeout')
       process.exit(1)
     }, 10_000)
   }
