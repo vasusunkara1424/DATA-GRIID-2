@@ -16,10 +16,10 @@ router.post(
     if (!userId) throw new ApiError(400, 'userId is required')
     if (!eventType) throw new ApiError(400, 'eventType is required')
 
-    await pool.query(
-      `INSERT INTO usage_events (user_id, event_type, metadata)
-       VALUES ($1, $2, $3)`,
-      [userId, eventType, JSON.stringify(metadata || {})]
+    await req.dbClient.query(
+      `INSERT INTO usage_events (user_id, event_type, metadata, workspace_id)
+       VALUES ($1, $2, $3, $4)`,
+      [userId, eventType, JSON.stringify(metadata || {}), req.workspaceId]
     )
     res.status(201).json({ success: true })
   })

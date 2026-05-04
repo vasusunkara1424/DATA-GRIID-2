@@ -12,7 +12,7 @@ const router = Router()
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
-    const { rows } = await pool.query(
+    const { rows } = await req.dbClient.query(
       'SELECT * FROM pipelines ORDER BY created_at DESC NULLS LAST, id DESC'
     )
     res.json({ success: true, pipelines: rows })
@@ -27,10 +27,10 @@ router.post(
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       throw new ApiError(400, 'name is required and must be a non-empty string')
     }
-    const { rows } = await pool.query(
-      `INSERT INTO pipelines (name, status, records, latency)
-       VALUES ($1, 'Scheduled', 0, 0) RETURNING *`,
-      [name.trim()]
+    const { rows } = await req.dbClient.query(
+      `INSERT INTO pipelines (name, status, records, latency, workspace_id)
+       VALUES ($1, 'Scheduled', 0, 0, $2) RETURNING *`,
+      [name.trim(), req.workspaceId]
     )
     res.status(201).json({ success: true, pipeline: rows[0] })
   })
@@ -44,7 +44,7 @@ router.delete(
     if (!Number.isInteger(id) || id <= 0) {
       throw new ApiError(400, 'id must be a positive integer')
     }
-    const { rowCount } = await pool.query('DELETE FROM pipelines WHERE id = $1', [id])
+    const { rowCount } = await req.dbClient.query('DELETE FROM pipelines WHERE id = $1', [id])
     if (rowCount === 0) throw new ApiError(404, `pipeline ${id} not found`)
     res.json({ success: true })
   })

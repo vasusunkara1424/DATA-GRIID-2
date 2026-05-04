@@ -12,7 +12,7 @@ const router = Router()
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
-    const { rows } = await pool.query(
+    const { rows } = await req.dbClient.query(
       'SELECT * FROM sources ORDER BY created_at DESC NULLS LAST, id DESC'
     )
     res.json({ success: true, sources: rows })
@@ -30,10 +30,10 @@ router.post(
     if (!type || typeof type !== 'string') {
       throw new ApiError(400, 'type is required (e.g. "database", "api", "storage")')
     }
-    const { rows } = await pool.query(
-      `INSERT INTO sources (name, type, status)
-       VALUES ($1, $2, 'IDLE') RETURNING *`,
-      [name.trim(), type.trim()]
+    const { rows } = await req.dbClient.query(
+      `INSERT INTO sources (name, type, status, workspace_id)
+       VALUES ($1, $2, 'IDLE', $3) RETURNING *`,
+      [name.trim(), type.trim(), req.workspaceId]
     )
     res.status(201).json({ success: true, source: rows[0] })
   })
@@ -47,7 +47,7 @@ router.delete(
     if (!Number.isInteger(id) || id <= 0) {
       throw new ApiError(400, 'id must be a positive integer')
     }
-    const { rowCount } = await pool.query('DELETE FROM sources WHERE id = $1', [id])
+    const { rowCount } = await req.dbClient.query('DELETE FROM sources WHERE id = $1', [id])
     if (rowCount === 0) throw new ApiError(404, `source ${id} not found`)
     res.json({ success: true })
   })

@@ -13,8 +13,8 @@ router.get(
   '/',
   asyncHandler(async (_req, res) => {
     const [pipelines, sources] = await Promise.all([
-      pool.query('SELECT COUNT(*)::int AS count FROM pipelines'),
-      pool.query('SELECT COUNT(*)::int AS count FROM sources'),
+      req.dbClient.query('SELECT COUNT(*)::int AS count FROM pipelines'),
+      req.dbClient.query('SELECT COUNT(*)::int AS count FROM sources'),
     ])
     res.json({
       success: true,
@@ -36,15 +36,15 @@ router.get(
     }
 
     const [pipelines, sources, alerts, aiQueries, recentEvents] = await Promise.all([
-      pool.query('SELECT COUNT(*)::int AS count FROM pipelines'),
-      pool.query('SELECT COUNT(*)::int AS count FROM sources'),
-      pool.query('SELECT COUNT(*)::int AS count FROM alerts WHERE resolved = FALSE'),
-      pool.query(
+      req.dbClient.query('SELECT COUNT(*)::int AS count FROM pipelines'),
+      req.dbClient.query('SELECT COUNT(*)::int AS count FROM sources'),
+      req.dbClient.query('SELECT COUNT(*)::int AS count FROM alerts WHERE resolved = FALSE'),
+      req.dbClient.query(
         `SELECT COUNT(*)::int AS count FROM usage_events
          WHERE user_id = $1 AND event_type = 'ai_query'`,
         [userId]
       ),
-      pool.query(
+      req.dbClient.query(
         `SELECT * FROM usage_events
          WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10`,
         [userId]

@@ -74,7 +74,7 @@ Rules:
     if (!safe) throw new ApiError(400, `Unsafe query rejected: ${reason}`, { sql })
 
     try {
-      const result = await readonlyPool.query(sql)
+      const result = await req.dbClient.query(sql)
       res.json({
         success: true,
         sql,

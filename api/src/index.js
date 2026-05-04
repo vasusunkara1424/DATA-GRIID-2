@@ -9,6 +9,7 @@ import cors from 'cors'
 import { env } from './config/env.js'
 import { pool, verifyConnection } from './db.js'
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js'
+import { withWorkspaceContext } from './middleware/workspaceContext.js'
 import { generalLimiter, aiLimiter } from './middleware/rateLimit.js'
 import logger from './lib/logger.js'
 import pinoHttp from 'pino-http'
@@ -91,13 +92,13 @@ app.get('/health/ready', async (_req, res) => {
 })
 
 // ─── Routes ──────────────────────────────────────────────────────────────
-app.use('/api/pipelines', pipelinesRouter)
-app.use('/api/sources', sourcesRouter)
-app.use('/api/stats', statsRouter)
-app.use('/api/alerts', alertsRouter)
+app.use('/api/pipelines', withWorkspaceContext, pipelinesRouter)
+app.use('/api/sources', withWorkspaceContext, sourcesRouter)
+app.use('/api/stats', withWorkspaceContext, statsRouter)
+app.use('/api/alerts', withWorkspaceContext, alertsRouter)
 app.use('/api/workspaces', workspacesRouter)
-app.use('/api/usage', usageRouter)
-app.use('/api/ai', aiLimiter, aiRouter)
+app.use('/api/usage', withWorkspaceContext, usageRouter)
+app.use('/api/ai', aiLimiter, withWorkspaceContext, aiRouter)
 
 // ─── Error handlers (must be LAST) ───────────────────────────────────────
 app.use(notFoundHandler)

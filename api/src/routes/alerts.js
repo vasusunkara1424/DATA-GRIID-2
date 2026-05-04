@@ -12,7 +12,7 @@ const router = Router()
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
-    const { rows } = await pool.query(
+    const { rows } = await req.dbClient.query(
       'SELECT * FROM alerts ORDER BY created_at DESC LIMIT 50'
     )
     res.json({ success: true, alerts: rows })
@@ -27,7 +27,7 @@ router.patch(
     if (!Number.isInteger(id) || id <= 0) {
       throw new ApiError(400, 'id must be a positive integer')
     }
-    const { rowCount } = await pool.query(
+    const { rowCount } = await req.dbClient.query(
       'UPDATE alerts SET resolved = TRUE WHERE id = $1',
       [id]
     )
