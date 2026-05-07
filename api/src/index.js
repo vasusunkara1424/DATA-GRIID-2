@@ -24,6 +24,7 @@ import alertsRouter from './routes/alerts.js'
 import workspacesRouter from './routes/workspaces.js'
 import usageRouter from './routes/usage.js'
 import aiRouter from './routes/ai.js'
+import destinationsRouter from './routes/destinations.js'
 
 const app = express()
 
@@ -99,6 +100,7 @@ app.use('/api/alerts', withWorkspaceContext, alertsRouter)
 app.use('/api/workspaces', workspacesRouter)
 app.use('/api/usage', withWorkspaceContext, usageRouter)
 app.use('/api/ai', aiLimiter, withWorkspaceContext, aiRouter)
+app.use('/api/destinations', withWorkspaceContext, destinationsRouter)
 
 // ─── Error handlers (must be LAST) ───────────────────────────────────────
 app.use(notFoundHandler)

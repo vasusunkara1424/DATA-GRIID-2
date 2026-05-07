@@ -33,6 +33,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@clickhouse/client": "^1.18.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
