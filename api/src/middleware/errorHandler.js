@@ -40,6 +40,7 @@ export function errorHandler(err, req, res, _next) {
   }
 
   if (isServerError) {
+    console.error('FULL ERROR:', err)
     logger.error(logContext, 'Server error handling request')
   } else {
     logger.warn(logContext, 'Client error handling request')
