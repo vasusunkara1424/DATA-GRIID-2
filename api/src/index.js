@@ -102,6 +102,7 @@ app.use('/api/workspaces', workspacesRouter)
 app.use('/api/usage', withWorkspaceContext, usageRouter)
 app.use('/api/ai', aiLimiter, withWorkspaceContext, aiRouter)
 app.use('/api/destinations', withWorkspaceContext, destinationsRouter)
+app.use('/api/sync', withWorkspaceContext, syncRouter)
 // ─── Error handlers (must be LAST) ───────────────────────────────────────
 app.use(notFoundHandler)
 app.use(errorHandler)
@@ -143,3 +144,4 @@ async function start() {
 }
 
 start()
+app.use('/api/sync', withWorkspaceContext, syncRouter)
