@@ -14,6 +14,6 @@ router.post('/:destinationId', asyncHandler(async (req, res) => {
     password: process.env.CLICKHOUSE_PASSWORD
   })
   res.json({ success: true, result })
-})
+}))
 
 export default router
