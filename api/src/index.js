@@ -25,7 +25,7 @@ import workspacesRouter from './routes/workspaces.js'
 import usageRouter from './routes/usage.js'
 import aiRouter from './routes/ai.js'
 import destinationsRouter from './routes/destinations.js'
-import syncRouter from './routes/sync.js'
+// import syncRouter from './routes/sync.js'
 
 const app = express()
 
@@ -102,7 +102,7 @@ app.use('/api/workspaces', workspacesRouter)
 app.use('/api/usage', withWorkspaceContext, usageRouter)
 app.use('/api/ai', aiLimiter, withWorkspaceContext, aiRouter)
 app.use('/api/destinations', withWorkspaceContext, destinationsRouter)
-app.use('/api/sync', withWorkspaceContext, syncRouter)revierw 
+app.use('//api/sync', withWorkspaceContext, syncRouter)revierw 
 // ─── Error handlers (must be LAST) ───────────────────────────────────────
 app.use(notFoundHandler)
 app.use(errorHandler)
