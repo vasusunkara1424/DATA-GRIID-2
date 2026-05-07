@@ -6,14 +6,13 @@ const router = Router()
 
 router.post('/:destinationId', asyncHandler(async (req, res) => {
   const { sourceTable = 'pipelines' } = req.body
-  const result = await syncTableToClickhouse(sourceTable, {
-    host: process.env.CLICKHOUSE_HOST,
-    port: process.env.CLICKHOUSE_PORT,
-    database: process.env.CLICKHOUSE_DATABASE,
-    username: process.env.CLICKHOUSE_USER,
-    password: process.env.CLICKHOUSE_PASSWORD
+  // TODO: implement ClickHouse sync when service is running
+  res.json({ 
+    success: true, 
+    message: 'Sync endpoint acknowledged (ClickHouse not yet deployed)',
+    destinationId: req.params.destinationId,
+    sourceTable
   })
-  res.json({ success: true, result })
 }))
 
 export default router
