@@ -52,7 +52,7 @@ function AppContent() {
 
     const syncToken = async () => {
       try {
-        const token = await getToken({ template: 'integration_default' })
+        const token = await getToken()
         if (token) {
           setAuthToken(token)
           setTokenReady(true)
