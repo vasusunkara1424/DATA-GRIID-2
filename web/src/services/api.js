@@ -7,16 +7,29 @@
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
+// Global auth token — set by ClerkProvider wrapper
+let authToken = null
+
+export function setAuthToken(token) {
+  authToken = token
+}
+
 /**
  * Thin fetch wrapper that:
  *  - Prefixes all paths with the API URL
  *  - Sets Content-Type to JSON automatically for POST/PATCH/PUT
+ *  - Adds Clerk auth token if available
  *  - Parses JSON response
  *  - Throws an Error on non-2xx responses so callers can use try/catch
  */
 async function request(path, options = {}) {
   const url = `${API_URL}${path}`
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+
+  // Add Clerk auth token if available
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`
+  }
 
   const response = await fetch(url, { ...options, headers })
   const data = await response.json().catch(() => ({}))

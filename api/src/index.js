@@ -6,6 +6,7 @@
 
 import express from 'express'
 import cors from 'cors'
+import { clerkMiddleware } from '@clerk/express'
 import { env } from './config/env.js'
 import { pool, verifyConnection } from './db.js'
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js'
@@ -38,6 +39,7 @@ app.use(
   })
 )
 app.use(express.json({ limit: '1mb' }))
+app.use(clerkMiddleware())
 app.use(generalLimiter)
 app.use(pinoHttp({ logger, customLogLevel: (req, res, err) => { if (res.statusCode >= 500 || err) return 'error'; if (res.statusCode >= 400) return 'warn'; return 'info' } }))
 
@@ -99,7 +101,7 @@ app.use('/api/pipelines', withWorkspaceContext, pipelinesRouter)
 app.use('/api/sources', withWorkspaceContext, sourcesRouter)
 app.use('/api/stats', withWorkspaceContext, statsRouter)
 app.use('/api/alerts', withWorkspaceContext, alertsRouter)
-app.use('/api/workspaces', workspacesRouter)
+app.use('/api/workspaces', withWorkspaceContext, workspacesRouter)
 app.use('/api/usage', withWorkspaceContext, usageRouter)
 app.use('/api/ai', aiLimiter, withWorkspaceContext, aiRouter)
 app.use('/api/destinations', withWorkspaceContext, destinationsRouter)

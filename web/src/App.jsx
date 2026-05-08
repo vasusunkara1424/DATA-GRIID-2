@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react'
+import { useState, useEffect } from 'react'
+import { SignedIn, SignedOut, UserButton, useAuth } from '@clerk/clerk-react'
+import { setAuthToken } from './services/api'
 import Landing from './Landing'
 import Ingestion from './Ingestion'
 import Transform from './Transform'
@@ -39,63 +40,83 @@ const Logo = () => (
   </svg>
 )
 
-export default function App() {
+function AppContent() {
   const [active, setActive] = useState('overview')
+  const { getToken } = useAuth()
   const current = TABS.find(t => t.id === active)
 
+  // Get Clerk token and set it in API client
+  useEffect(() => {
+    const syncToken = async () => {
+      try {
+        const token = await getToken()
+        if (token) {
+          setAuthToken(token)
+        }
+      } catch (err) {
+        console.error('Failed to get Clerk token:', err)
+      }
+    }
+    syncToken()
+  }, [getToken])
+
+  return (
+    <div style={{display:'flex', height:'100vh', overflow:'hidden', background:'#0a0a0f', color:'#e8e8f0', fontFamily:'Syne, sans-serif'}}>
+
+      <aside style={{width:'220px', background:'#111118', borderRight:'1px solid #2a2a38', display:'flex', flexDirection:'column'}}>
+        <div style={{padding:'16px 20px', borderBottom:'1px solid #2a2a38', display:'flex', alignItems:'center', gap:'10px'}}>
+          <Logo />
+          <span style={{fontSize:'16px', fontWeight:'700', color:'#00e5ff', letterSpacing:'-0.5px'}}>DataGriid</span>
+        </div>
+
+        <nav style={{flex:1, overflowY:'auto', padding:'12px 0'}}>
+          {TABS.map(tab => (
+            <button key={tab.id} onClick={() => setActive(tab.id)}
+              style={{width:'100%', padding:'10px 20px', border:'none', background:'none',
+                color: active === tab.id ? '#e8e8f0' : '#6b6b80',
+                cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:'12px',
+                borderLeft: active === tab.id ? '2px solid #00e5ff' : '2px solid transparent',
+                backgroundColor: active === tab.id ? 'rgba(0,229,255,0.06)' : 'transparent'}}>
+              <span style={{fontSize:'16px'}}>{tab.icon}</span>
+              <div style={{fontSize:'13px', fontWeight: active === tab.id ? '700' : '500'}}>{tab.label}</div>
+              {active === tab.id && <div style={{marginLeft:'auto', width:'6px', height:'6px', borderRadius:'50%', background:'#00e5ff'}}/>}
+            </button>
+          ))}
+        </nav>
+
+        <div style={{padding:'16px 20px', borderTop:'1px solid #2a2a38', display:'flex', alignItems:'center', gap:'10px'}}>
+          <UserButton/>
+          <div style={{fontSize:'12px', color:'#6b6b80'}}>Account</div>
+        </div>
+      </aside>
+
+      <div style={{flex:1, display:'flex', flexDirection:'column', overflow:'hidden'}}>
+        <header style={{padding:'0 24px', height:'56px', borderBottom:'1px solid #2a2a38', display:'flex', alignItems:'center', justifyContent:'space-between', background:'#111118'}}>
+          <span style={{fontSize:'16px', fontWeight:'700'}}>{current?.label}</span>
+          <button style={{padding:'8px 16px', borderRadius:'8px', border:'none', background:'#00e5ff', color:'#000', fontWeight:'700', cursor:'pointer', fontSize:'13px'}}>+ Pipeline</button>
+        </header>
+
+        <main style={{flex:1, overflowY:'auto'}}>
+          {active === 'overview'   && <Overview />}
+          {active === 'ingestion'  && <Ingestion />}
+          {active === 'transform'  && <Transform />}
+          {active === 'monitor'    && <Monitor />}
+          {active === 'visualize'  && <Visualize />}
+          {active === 'catalog'    && <AI />}
+          {active === 'connectors' && <Connectors />}
+          {active === 'teams'      && <Teams />}
+          {active === 'settings'   && <Settings />}
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
   return (
     <>
       <SignedOut><Landing /></SignedOut>
-      <SignedIn>
-        <div style={{display:'flex', height:'100vh', overflow:'hidden', background:'#0a0a0f', color:'#e8e8f0', fontFamily:'Syne, sans-serif'}}>
-
-          <aside style={{width:'220px', background:'#111118', borderRight:'1px solid #2a2a38', display:'flex', flexDirection:'column'}}>
-            <div style={{padding:'16px 20px', borderBottom:'1px solid #2a2a38', display:'flex', alignItems:'center', gap:'10px'}}>
-              <Logo />
-              <span style={{fontSize:'16px', fontWeight:'700', color:'#00e5ff', letterSpacing:'-0.5px'}}>DataGriid</span>
-            </div>
-
-            <nav style={{flex:1, overflowY:'auto', padding:'12px 0'}}>
-              {TABS.map(tab => (
-                <button key={tab.id} onClick={() => setActive(tab.id)}
-                  style={{width:'100%', padding:'10px 20px', border:'none', background:'none',
-                    color: active === tab.id ? '#e8e8f0' : '#6b6b80',
-                    cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:'12px',
-                    borderLeft: active === tab.id ? '2px solid #00e5ff' : '2px solid transparent',
-                    backgroundColor: active === tab.id ? 'rgba(0,229,255,0.06)' : 'transparent'}}>
-                  <span style={{fontSize:'16px'}}>{tab.icon}</span>
-                  <div style={{fontSize:'13px', fontWeight: active === tab.id ? '700' : '500'}}>{tab.label}</div>
-                  {active === tab.id && <div style={{marginLeft:'auto', width:'6px', height:'6px', borderRadius:'50%', background:'#00e5ff'}}/>}
-                </button>
-              ))}
-            </nav>
-
-            <div style={{padding:'16px 20px', borderTop:'1px solid #2a2a38', display:'flex', alignItems:'center', gap:'10px'}}>
-              <UserButton/>
-              <div style={{fontSize:'12px', color:'#6b6b80'}}>Account</div>
-            </div>
-          </aside>
-
-          <div style={{flex:1, display:'flex', flexDirection:'column', overflow:'hidden'}}>
-            <header style={{padding:'0 24px', height:'56px', borderBottom:'1px solid #2a2a38', display:'flex', alignItems:'center', justifyContent:'space-between', background:'#111118'}}>
-              <span style={{fontSize:'16px', fontWeight:'700'}}>{current?.label}</span>
-              <button style={{padding:'8px 16px', borderRadius:'8px', border:'none', background:'#00e5ff', color:'#000', fontWeight:'700', cursor:'pointer', fontSize:'13px'}}>+ Pipeline</button>
-            </header>
-
-            <main style={{flex:1, overflowY:'auto'}}>
-              {active === 'overview'   && <Overview />}
-              {active === 'ingestion'  && <Ingestion />}
-              {active === 'transform'  && <Transform />}
-              {active === 'monitor'    && <Monitor />}
-              {active === 'visualize'  && <Visualize />}
-              {active === 'catalog'    && <AI />}
-              {active === 'connectors' && <Connectors />}
-              {active === 'teams'      && <Teams />}
-              {active === 'settings'   && <Settings />}
-            </main>
-          </div>
-        </div>
-      </SignedIn>
+      <SignedIn><AppContent /></SignedIn>
     </>
   )
 }

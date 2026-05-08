@@ -3,8 +3,20 @@ import logger from '../lib/logger.js'
 import { ApiError } from './errorHandler.js'
 
 export async function withWorkspaceContext(req, res, next) {
-  const userId = req.auth?.userId
-  if (!userId) return next(new ApiError(401, 'Not authenticated'))
+  // Try to get userId from Clerk middleware first
+  let userId = req.auth?.userId
+  
+  // If not found, try to extract from Authorization header
+  if (!userId && req.headers.authorization) {
+    const token = req.headers.authorization.replace('Bearer ', '')
+    // For now, we'll log the token to debug
+    logger.info({ token: token.substring(0, 20) + '...' }, 'Token found in header')
+  }
+  
+  if (!userId) {
+    logger.warn({ auth: req.auth, hasAuthHeader: !!req.headers.authorization }, 'No userId found')
+    return next(new ApiError(401, 'Not authenticated'))
+  }
 
   try {
     const { rows } = await pool.query(
