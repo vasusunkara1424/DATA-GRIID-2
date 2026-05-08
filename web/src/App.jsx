@@ -42,23 +42,43 @@ const Logo = () => (
 
 function AppContent() {
   const [active, setActive] = useState('overview')
-  const { getToken } = useAuth()
+  const [tokenReady, setTokenReady] = useState(false)
+  const { getToken, isSignedIn } = useAuth()
   const current = TABS.find(t => t.id === active)
 
   // Get Clerk token and set it in API client
   useEffect(() => {
+    if (!isSignedIn) return
+
     const syncToken = async () => {
       try {
-        const token = await getToken()
+        const token = await getToken({ template: 'integration_default' })
         if (token) {
           setAuthToken(token)
+          setTokenReady(true)
         }
       } catch (err) {
         console.error('Failed to get Clerk token:', err)
       }
     }
+    
     syncToken()
-  }, [getToken])
+    // Refresh token every 5 minutes to stay fresh
+    const interval = setInterval(syncToken, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [getToken, isSignedIn])
+
+  // Don't render main content until token is ready
+  if (!tokenReady) {
+    return (
+      <div style={{display:'flex', height:'100vh', alignItems:'center', justifyContent:'center', background:'#0a0a0f', color:'#e8e8f0'}}>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:'32px', marginBottom:'16px'}}>⟳</div>
+          <div>Loading DataGrid...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{display:'flex', height:'100vh', overflow:'hidden', background:'#0a0a0f', color:'#e8e8f0', fontFamily:'Syne, sans-serif'}}>
