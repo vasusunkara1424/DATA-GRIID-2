@@ -4,19 +4,19 @@ import { ApiError } from './errorHandler.js'
 import { verifyToken } from '@clerk/backend'
 
 export async function withWorkspaceContext(req, res, next) {
-  // Extract token from Authorization header
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next(new ApiError(401, 'Missing authorization header'))
   }
 
-  const token = authHeader.substring(7) // Remove "Bearer "
+  const token = authHeader.substring(7)
   let userId
 
   try {
-    // Verify the Clerk token
-    const verified = await verifyToken(token)
-    userId = verified.sub // sub is the user ID in Clerk tokens
+    const verified = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    })
+    userId = verified.sub
   } catch (err) {
     logger.warn({ err: err.message }, 'Token verification failed')
     return next(new ApiError(401, 'Invalid token'))
