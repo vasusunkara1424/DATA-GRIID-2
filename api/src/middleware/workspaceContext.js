@@ -1,21 +1,29 @@
 import { pool } from '../db.js'
 import logger from '../lib/logger.js'
 import { ApiError } from './errorHandler.js'
+import { verifyToken } from '@clerk/backend'
 
 export async function withWorkspaceContext(req, res, next) {
-  // Try to get userId from Clerk middleware first
-  let userId = req.auth?.userId
-  
-  // If not found, try to extract from Authorization header
-  if (!userId && req.headers.authorization) {
-    const token = req.headers.authorization.replace('Bearer ', '')
-    // For now, we'll log the token to debug
-    logger.info({ token: token.substring(0, 20) + '...' }, 'Token found in header')
+  // Extract token from Authorization header
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next(new ApiError(401, 'Missing authorization header'))
   }
-  
+
+  const token = authHeader.substring(7) // Remove "Bearer "
+  let userId
+
+  try {
+    // Verify the Clerk token
+    const verified = await verifyToken(token)
+    userId = verified.sub // sub is the user ID in Clerk tokens
+  } catch (err) {
+    logger.warn({ err: err.message }, 'Token verification failed')
+    return next(new ApiError(401, 'Invalid token'))
+  }
+
   if (!userId) {
-    logger.warn({ auth: req.auth, hasAuthHeader: !!req.headers.authorization }, 'No userId found')
-    return next(new ApiError(401, 'Not authenticated'))
+    return next(new ApiError(401, 'No user ID in token'))
   }
 
   try {
@@ -31,6 +39,7 @@ export async function withWorkspaceContext(req, res, next) {
 
     req.workspaceId = workspaceId
     req.dbClient = client
+    req.userId = userId
 
     res.on('finish', () => client.release())
     next()
