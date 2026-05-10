@@ -27,6 +27,8 @@ import usageRouter from './routes/usage.js'
 import aiRouter from './routes/ai.js'
 import destinationsRouter from './routes/destinations.js'
 import syncRouter from './routes/sync.js'
+import connectorsRouter, { setupCDCEventHandlers, cdcEngine } from './routes/connectors.js'
+import { setupCDCWebSocket } from './websocket/cdcWebSocket.js'
 
 const app = express()
 app.set('trust proxy', 1)
@@ -105,6 +107,7 @@ app.use('/api/usage', withWorkspaceContext, usageRouter)
 app.use('/api/ai', aiLimiter, withWorkspaceContext, aiRouter)
 app.use('/api/destinations', withWorkspaceContext, destinationsRouter)
 app.use('/api/sync', withWorkspaceContext, syncRouter)
+app.use('/api/connectors', withWorkspaceContext, connectorsRouter)
 
 // ─── Error handlers (must be LAST) ───────────────────────────────────────
 app.use(notFoundHandler)
@@ -125,11 +128,26 @@ async function start() {
   })
 
   startWebSocket(server)
+  setupCDCEventHandlers(cdcEngine, pool)
+  setupCDCWebSocket(server, { authenticate: clerkMiddleware })
   startAnomalyDetector()
 
   // ─── Graceful shutdown ─────────────────────────────────────────────────
   const shutdown = (signal) => {
     logger.warn({ signal }, 'Shutdown signal received')
+    
+    // Stop all CDC streams
+    const sessions = cdcEngine.getActiveSessions()
+    for (const session of sessions) {
+      try {
+        cdcEngine.stopStreaming(session.connectorId).catch(err => {
+          logger.error({ err: err.message }, `Error stopping CDC ${session.connectorId}`)
+        })
+      } catch (err) {
+        logger.error({ err: err.message }, `Error stopping CDC ${session.connectorId}`)
+      }
+    }
+    
     stopAnomalyDetector()
     server.close(async () => {
       await closeWebSocket()
