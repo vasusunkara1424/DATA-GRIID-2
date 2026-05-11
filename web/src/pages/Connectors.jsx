@@ -19,9 +19,6 @@ import {
 
 // Use localhost for dev, production URL for prod
 const API_URL = 'http://localhost:4000';
-  ? 'https://dataflow-api-production-7b08.up.railway.app'
-  : 'http://localhost:4000';
-
 export default function Connectors() {
   const { getToken } = useAuth();
   const [connectors, setConnectors] = useState([]);
@@ -122,7 +119,7 @@ export default function Connectors() {
 
     ws.onclose = () => {
       console.log('[CDC] WebSocket disconnected');
-      setTimeout(setupWebSocket, 3000);
+      // setTimeout(setupWebSocket, 3000); // Disabled in dev
     };
 
     wsRef.current = ws;
@@ -141,7 +138,7 @@ export default function Connectors() {
   const fetchConnectors = async () => {
     try {
       setLoading(true);
-      const data = await apiCall('/api/connectors', 'GET');
+      const data = await apiCall('/api/connectors/list', 'GET');
       setConnectors(data);
     } catch (error) {
       console.error('Failed to fetch connectors:', error);
@@ -155,7 +152,7 @@ export default function Connectors() {
     setTestResult(null);
 
     try {
-      const response = await apiCall('/api/connectors', 'POST', {
+      const response = await apiCall('/api/connectors/create-public', 'POST', {
         name: formData.name,
         type: formData.type,
         config: {
@@ -192,7 +189,7 @@ export default function Connectors() {
     setTestResult(null);
 
     try {
-      const response = await apiCall('/api/connectors/test', 'POST', {
+      const response = await apiCall('/api/connectors/test-public', 'POST', {
         type: formData.type,
         config: {
           host: formData.host,

@@ -66,7 +66,7 @@ export const sources = {
 // ─── Stats ─────────────────────────────────────────────────────
 export const stats = {
   global: () => request('/api/stats'),
-  user: (userId) => request(`/api/stats/user/${userId}`),
+  user: (userId) => request('/api/stats/public'),
 }
 
 // ─── Alerts ────────────────────────────────────────────────────

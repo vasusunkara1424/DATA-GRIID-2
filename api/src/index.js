@@ -98,6 +98,99 @@ app.get('/health/ready', async (_req, res) => {
 })
 
 // ─── Routes ──────────────────────────────────────────────────────────────
+
+// ─── Public Endpoints (NO AUTH) ──────────────────────────────────────
+app.get('/api/stats/public', async (req, res) => {
+  try {
+    const connectors = await pool.query('SELECT COUNT(*) as count FROM connectors WHERE workspace_id = 1');
+    const pipelines = await pool.query('SELECT COUNT(*) as count FROM pipelines WHERE workspace_id = 1');
+    const alerts = await pool.query('SELECT COUNT(*) as count FROM alerts WHERE workspace_id = 1');
+    res.json({
+      pipelines: parseInt(pipelines.rows[0].count) || 0,
+      sources: parseInt(connectors.rows[0].count) || 0,
+      activeAlerts: parseInt(alerts.rows[0].count) || 0,
+      aiQueries: 0
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/connectors/list', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name, type, status, config FROM connectors WHERE workspace_id = 1 ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/connectors/test-public', async (req, res) => {
+  try {
+    const { config } = req.body;
+    const { Client } = await import('pg');
+    const client = new Client(config);
+    await client.connect();
+    const result = await client.query('SELECT version()');
+    await client.end();
+    res.json({ success: true, message: 'Connection successful', version: result.rows[0].version });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/connectors/create-public', async (req, res) => {
+  try {
+    const { name, type, config } = req.body;
+    const result = await pool.query(
+      'INSERT INTO connectors (workspace_id, name, type, config, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [1, name, type, JSON.stringify(config), 'inactive']
+    );
+    res.json({ success: true, connector: result.rows[0] });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// ─── Public Endpoints (NO AUTH) ──────────────────────────────────────
+app.get('/api/stats/public', async (req, res) => {
+  try {
+    const connectors = await pool.query('SELECT COUNT(*) as count FROM connectors WHERE workspace_id = 1');
+    const pipelines = await pool.query('SELECT COUNT(*) as count FROM pipelines WHERE workspace_id = 1');
+    const alerts = await pool.query('SELECT COUNT(*) as count FROM alerts WHERE workspace_id = 1');
+    res.json({
+      pipelines: parseInt(pipelines.rows[0].count) || 0,
+      sources: parseInt(connectors.rows[0].count) || 0,
+      activeAlerts: parseInt(alerts.rows[0].count) || 0,
+      aiQueries: 0
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/connectors/list', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name, type, status, config FROM connectors WHERE workspace_id = 1 ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/connectors/test-public', async (req, res) => {
+  try {
+    const { config } = req.body;
+    const { Client } = await import('pg');
+    const client = new Client(config);
+    await client.connect();
+    const result = await client.query('SELECT version()');
+    await client.end();
+    res.json({ success: true, message: 'Connection successful', version: result.rows[0].version });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
 app.use('/api/pipelines', withWorkspaceContext, pipelinesRouter)
 app.use('/api/sources', withWorkspaceContext, sourcesRouter)
 app.use('/api/stats', withWorkspaceContext, statsRouter)
