@@ -15,6 +15,7 @@ import { generalLimiter, aiLimiter } from './middleware/rateLimit.js'
 import logger from './lib/logger.js'
 import pinoHttp from 'pino-http'
 import { startWebSocket, closeWebSocket, getClientCount } from './websocket.js'
+import { runMigrations } from './lib/migrate.js';
 import { startAnomalyDetector, stopAnomalyDetector } from './lib/anomalyDetector.js'
 
 // Routes
@@ -209,6 +210,7 @@ app.use(errorHandler)
 // ─── Server startup ──────────────────────────────────────────────────────
 async function start() {
   try {
+  await runMigrations();
     const dbInfo = await verifyConnection()
     logger.info({ dbVersion: dbInfo.version }, "Database connected")
   } catch (err) {
