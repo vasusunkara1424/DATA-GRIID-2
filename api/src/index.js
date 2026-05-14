@@ -24,6 +24,7 @@ import sourcesRouter from './routes/sources.js'
 import statsRouter from './routes/stats.js'
 import alertsRouter from './routes/alerts.js'
 import workspacesRouter from './routes/workspaces.js'
+import initRouter from './routes/init.js'
 import usageRouter from './routes/usage.js'
 import aiRouter from './routes/ai.js'
 import destinationsRouter from './routes/destinations.js'
@@ -196,6 +197,7 @@ app.use('/api/pipelines', withWorkspaceContext, pipelinesRouter)
 app.use('/api/sources', withWorkspaceContext, sourcesRouter)
 app.use('/api/stats', withWorkspaceContext, statsRouter)
 app.use('/api/alerts', withWorkspaceContext, alertsRouter)
+app.use('/api/init', initRouter)
 app.use('/api/workspaces', withWorkspaceContext, workspacesRouter)
 app.use('/api/usage', withWorkspaceContext, usageRouter)
 app.use('/api/ai', aiLimiter, withWorkspaceContext, aiRouter)

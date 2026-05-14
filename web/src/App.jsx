@@ -55,6 +55,17 @@ function AppContent() {
         const token = await getToken()
         if (token) {
           setAuthToken(token)
+          // Initialize workspace for new user
+          if (user?.id) {
+            fetch(`http://localhost:4000/api/init/workspace`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: user.id,
+                email: user.primaryEmailAddress?.emailAddress || 'user@example.com'
+              })
+            }).catch(err => console.error('Workspace init failed:', err))
+          }
           setTokenReady(true)
         }
       } catch (err) {
