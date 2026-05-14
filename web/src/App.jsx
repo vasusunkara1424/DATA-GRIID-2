@@ -43,7 +43,7 @@ const Logo = () => (
 function AppContent() {
   const [active, setActive] = useState('overview')
   const [tokenReady, setTokenReady] = useState(false)
-  const { getToken, isSignedIn } = useAuth()
+  const { getToken, isSignedIn, user } = useAuth()
   const current = TABS.find(t => t.id === active)
 
   // Get Clerk token and set it in API client
